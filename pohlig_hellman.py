@@ -1,15 +1,16 @@
-
 from functools import reduce
 from gmpy2 import invert, isqrt, powmod, gcd, lcm
 from factordb.factordb import FactorDB
 
 
 """
-prime factor decomposition tool based on factprdb
+Pohlig Hellman algorithm based on english wikipedia description
 """
 
 def integer2factordict(N, verbose=False):
     """
+    prime factor decomposition based on factordb
+
     get factors and put them in a dictionary, i.e.
     if N = 2*2*3*3*3*3*5*7*7
     then the output will be {2: 2, 3: 4, 5: 1, 7: 2}
@@ -116,12 +117,12 @@ def discrete_log_power_prime(g, h, p, e, ptot):
 def pohlig_hellman_wikipedia(h, g, p):   # log_g(h) % p
     """
     https://www.wikiwand.com/en/Pohlig%E2%80%93Hellman_algorithm or https://en.wikipedia.org/wiki/Pohlig%E2%80%93Hellman_algorithm
-    note that all powmod are taken modulo p not q to some power
+    note that all powmod are taken modulo p (not q to some power)
     also the case q == 2 is handled separately, using brute force
     """
     factordict = integer2factordict(p-1)
     factorlist = [q**e for q, e in factordict.items()]
-    # print(factorlist)
+    
     loglist = []
     
     for q, e in factordict.items():
@@ -141,7 +142,6 @@ def pohlig_hellman_wikipedia(h, g, p):   # log_g(h) % p
             x = discrete_log_power_prime(gi, hi, q, e, p)
         loglist.append(x)
 
-    # print(loglist)
     return chinese_remainder_theorem(loglist, factorlist)
 
 
@@ -153,20 +153,6 @@ def is_primitive_root(n, p):
         if powmod(n, (p-1) // factor, p) == 1:
             return False
     return True
-
-
-def get_order(n, p):
-    factordict = integer2factordict(p-1)
-    ordern = p-1
-    for q, e in factordict.items():
-        # find exponent oexp such that powmod(n, (p-1)//(q**oexp), 1) == 1
-        oexp = 1
-        for l in range(e):
-            if powmod(n, (p-1)// (q**l), p) == 1:
-                oexp *= q
-        # update order of n
-        ordern = ordern // oexp
-    return ordern
 
 
 def multiplicative_order_prime_power(n, r):
