@@ -81,14 +81,11 @@ def baby_step_giant_step(g, h, p, q, verbose=False):
     if verbose:
         print('Compute value of g^(m * (p-2)) (mod p)')
     gn = powmod(g, m * (p - 2), p)
-    # currentPower = (gn * h) % p
     # Search for a match between b * a^(-kj) (mod m) and table
     if verbose:
         print(f'Search for a match between h * g^(-kj) (mod m) and table')
     y = h % p
-    # for k in tqdm.tqdm(range(m), total=int(m)):
-    for k in range(m):  
-        # y = (h * powmod(gn, k, p)) % p
+    for k in range(m):
         if y in table:
             return m * k + table[y]
         y = (y*gn) % p
@@ -122,7 +119,7 @@ def pohlig_hellman_wikipedia(h, g, p):   # log_g(h) % p
     """
     factordict = integer2factordict(p-1)
     factorlist = [q**e for q, e in factordict.items()]
-    
+
     loglist = []
     
     for q, e in factordict.items():
@@ -155,14 +152,15 @@ def is_primitive_root(n, p):
     return True
 
 
-def multiplicative_order_prime_power(n, r):
+def multiplicative_order_prime_power(n, p, e):
     # https://rosettacode.org/wiki/Multiplicative_order#Python
     # thanks rosetta code!    
-    p, e = r
     m = p**e
     t = (p-1)*(p**(e-1)) #  = Phi(p**e) where p prime
+
     qs = [1,]
-    for f in integer2factordict(t).items():
+    factordict = integer2factordict(t)
+    for f in factordict.items():
         qs = [q*f[0]**j for j in range(1+f[1]) for q in qs]
     qs.sort()
 
@@ -178,7 +176,7 @@ def multiplicative_order(n, p):
     if gcd(n, p) != 1:
         return None
     factordict = integer2factordict(p)
-    mofs = (multiplicative_order_prime_power(n, r) for r in factordict.items())
+    mofs = (multiplicative_order_prime_power(n, q, e) for q, e in factordict.items())
     return reduce(lcm, mofs, 1)  # lcm over all mofs
     
 
@@ -198,7 +196,7 @@ def test(g, h, p, testnum):
         is_solution = powmod(g, x, p) == h
         print('x is a solution ? : ', is_solution)
     else:
-        orderg = multiplicative_order_prime_power(g, (p, 1))
+        orderg = multiplicative_order_prime_power(g, p, 1)
         print('multiple solutions')
         print(f'order of {g} mod {p} = {orderg}')
         
